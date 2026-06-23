@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Session Handoff · a Claude Code skill</title>
+<meta name="description" content="A Claude Code skill that turns the end of a session into a clean, pointer-first handoff so the next session resumes where you left off, without re-reading the whole conversation." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --teal:#19C3B2;
+    --teal-ink:#0c8175;
+    --navy:#001627;
+    --cream:#f0ede8;
+    --cream-2:#e7e2da;
+    --ink-soft:#3a4a52;
+    --line:rgba(0,22,39,.12);
+    --serif:"Fraunces",Georgia,serif;
+    --sans:"Inter",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--sans);
+    background:var(--cream);
+    color:var(--navy);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px}
+  .btn{
+    display:inline-block;background:var(--teal);color:var(--navy);
+    font-weight:600;text-decoration:none;padding:14px 26px;border-radius:10px;
+    border:1px solid transparent;transition:transform .15s ease,box-shadow .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(25,195,178,.32)}
+  .btn.ghost{background:transparent;border-color:var(--line);color:var(--navy)}
+  .btn.ghost:hover{box-shadow:none;border-color:var(--navy)}
+
+  /* nav */
+  nav{border-bottom:1px solid var(--line)}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{font-family:var(--serif);font-weight:600;font-size:18px;letter-spacing:-.01em}
+  .brand .dot{color:var(--teal)}
+  .nav-links{display:flex;gap:22px;align-items:center;font-size:14px;font-weight:500}
+  .nav-links a{text-decoration:none;opacity:.8}
+  .nav-links a:hover{opacity:1;color:var(--teal-ink)}
+
+  /* hero */
+  header.hero{padding:84px 0 64px}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--teal-ink);margin-bottom:18px;
+  }
+  h1{
+    font-family:var(--serif);font-weight:600;font-size:clamp(38px,6vw,64px);
+    line-height:1.04;letter-spacing:-.02em;max-width:14ch;
+  }
+  h1 em{font-style:italic;color:var(--teal-ink)}
+  .lede{font-size:clamp(17px,2.2vw,20px);color:var(--ink-soft);max-width:60ch;margin:24px 0 32px}
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .cta-note{font-size:13px;color:var(--ink-soft);font-family:var(--mono)}
+
+  /* section shell */
+  section{padding:64px 0;border-top:1px solid var(--line)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-ink);margin-bottom:14px}
+  h2{font-family:var(--serif);font-weight:600;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.015em;line-height:1.12;max-width:18ch}
+  .sub{color:var(--ink-soft);max-width:62ch;margin-top:14px}
+
+  /* what cards */
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px}
+  .card h3{font-family:var(--serif);font-weight:600;font-size:19px;margin-bottom:8px}
+  .card p{font-size:14.5px;color:var(--ink-soft)}
+  .card .ico{width:34px;height:34px;border-radius:9px;background:rgba(25,195,178,.16);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .card .ico svg{width:18px;height:18px;stroke:var(--teal-ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* comparison */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:38px}
+  .col{border-radius:14px;padding:26px;border:1px solid var(--line)}
+  .col.bad{background:#fff}
+  .col.good{background:var(--navy);color:var(--cream);border-color:var(--navy)}
+  .col h3{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .col.good h3{color:#fff}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:999px}
+  .col.bad .tag{background:var(--cream-2);color:var(--ink-soft)}
+  .col.good .tag{background:var(--teal);color:var(--navy)}
+  .col ul{list-style:none;display:flex;flex-direction:column;gap:13px}
+  .col li{font-size:14.5px;padding-left:26px;position:relative}
+  .col.bad li::before{content:"✕";position:absolute;left:0;color:#b4452f;font-weight:700}
+  .col.good li::before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:700}
+  .col.good li{color:rgba(240,237,232,.92)}
+
+  /* install */
+  .code{
+    background:var(--navy);color:var(--cream);border-radius:14px;padding:24px 26px;
+    font-family:var(--mono);font-size:13.5px;line-height:1.9;overflow-x:auto;margin-top:26px;
+  }
+  .code .c{color:#7f9aa6}
+  .code .t{color:var(--teal)}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+  .mode{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
+  .mode h3{font-family:var(--serif);font-size:18px;font-weight:600;margin-bottom:6px}
+  .mode code{font-family:var(--mono);font-size:13px;background:var(--cream-2);padding:2px 7px;border-radius:6px;color:var(--teal-ink)}
+  .mode p{font-size:14px;color:var(--ink-soft);margin-top:8px}
+
+  /* footer */
+  footer{border-top:1px solid var(--line);padding:44px 0 56px;text-align:center}
+  footer .brand{font-size:20px;margin-bottom:10px}
+  .social{display:flex;gap:18px;justify-content:center;margin:18px 0 14px;font-size:14px;font-weight:500}
+  .social a{text-decoration:none;opacity:.75}
+  .social a:hover{opacity:1;color:var(--teal-ink)}
+  .fine{font-size:12.5px;color:var(--ink-soft);font-family:var(--mono)}
+
+  @media (max-width:760px){
+    .grid3{grid-template-columns:1fr}
+    .compare{grid-template-columns:1fr}
+    .modes{grid-template-columns:1fr}
+    .nav-links a:not(.btn){display:none}
+    header.hero{padding:56px 0 44px}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand">Session&nbsp;Handoff<span class="dot">.</span></div>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#difference">The difference</a>
+      <a href="#install">Install</a>
+      <a class="btn ghost" href="https://github.com/hackeryisus/claude-session-handoff">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">A skill for Claude Code</div>
+    <h1>End a session. <em>Resume</em> it cold, without re-reading everything.</h1>
+    <p class="lede">
+      Session Handoff turns the end of your work into a small, pointer-first
+      document: what's done, what's half-done, where the files live, and the one
+      next action. The next session, tomorrow or fresh after <code>/clear</code>,
+      picks up exactly where you stopped, for a fraction of the tokens.
+    </p>
+    <div class="cta-row">
+      <a class="btn" href="#install">Install the skill</a>
+      <a class="btn ghost" href="https://github.com/hackeryisus/claude-session-handoff">View on GitHub</a>
+      <span class="cta-note">free · MIT · works with any task</span>
+    </div>
+  </div>
+</header>
+
+<section id="how">
+  <div class="wrap">
+    <div class="kicker">What it does</div>
+    <h2>A routing artifact, not a status report.</h2>
+    <p class="sub">
+      The handoff is written for the <em>next instance of the model</em>, not for
+      a stakeholder. It links to your source files instead of pasting them, so
+      resuming means reading one screen, then pulling only the file the current
+      step needs.
+    </p>
+    <div class="grid3">
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <h3>Step ledger</h3>
+        <p>Done, in-progress, and pending items: the one thing your plan files don't already contain. The resume anchor.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9z"/></svg></div>
+        <h3>Pointer-first</h3>
+        <p>Links to the brainstorm, plan, and deliverables; never copies them. The whole point is token efficiency.</p>
+      </div>
+      <div class="card">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4v7a4 4 0 0 1-4 4H6"/></svg></div>
+        <h3>Parallel tracks</h3>
+        <p>Fan one finished plan out into several sessions. Each track owns disjoint files, so they never clobber each other.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="difference">
+  <div class="wrap">
+    <div class="kicker">The difference</div>
+    <h2>Doing it without the skill vs. with it.</h2>
+    <p class="sub">Continuing a long task across sessions normally forces a bad trade: re-paste everything (slow, expensive) or wing it from memory (lossy). The skill removes the trade.</p>
+    <div class="compare">
+      <div class="col bad">
+        <h3><span class="tag">Without</span> Manual handoff</h3>
+        <ul>
+          <li>Re-paste the transcript or re-explain from scratch</li>
+          <li>High token cost: full context re-sent every time</li>
+          <li>"What's done?" is fuzzy, recalled from memory</li>
+          <li>Decisions get re-derived; finished files get re-read</li>
+          <li>Parallel sessions step on each other's files</li>
+          <li>You open the new session asking "where was I?"</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h3><span class="tag">With</span> Session Handoff</h3>
+        <ul>
+          <li>Next session reads one short file</li>
+          <li>Low token cost: links, not copies</li>
+          <li>Explicit step ledger: done / half-done / pending</li>
+          <li>Source material is referenced, pulled only when needed</li>
+          <li>Fan-out tracks own disjoint files, no collisions</li>
+          <li>One explicit "pick up here" line waiting for you</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="kicker">Install</div>
+    <h2>A skill is just a folder with a SKILL.md.</h2>
+    <p class="sub">Drop it where Claude Code looks for skills, restart, and it activates on its own when you say "session handoff" or "wrap up this session." No slash command.</p>
+
+    <div class="code">
+<span class="c"># clone and install into your Claude Code skills directory</span>
+git clone https://github.com/hackeryisus/claude-session-handoff
+mkdir -p ~/.claude/skills/session-handoff
+cp claude-session-handoff/skill/SKILL.md ~/.claude/skills/session-handoff/SKILL.md
+
+<span class="c"># or just tell Claude Code:</span>
+<span class="t">"Clone hackeryisus/claude-session-handoff and install the skill for me."</span>
+    </div>
+
+    <div class="modes">
+      <div class="mode">
+        <h3>Chat mode <code>default</code></h3>
+        <p>Say <code>wrap up this session</code>. Prints the handoff right in the conversation: a quick "where am I" before you clear.</p>
+      </div>
+      <div class="mode">
+        <h3>File mode</h3>
+        <p>Say <code>handoff to file</code>. Writes a portable <code>*-handoff.md</code> a fresh session resumes from, or splits into parallel tracks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand">Session&nbsp;Handoff<span class="dot">.</span></div>
+    <p class="fine">An open-source Claude Code skill · MIT licensed</p>
+    <div class="social">
+      <a href="https://github.com/hackeryisus/claude-session-handoff">GitHub</a>
+      <a href="https://www.linkedin.com/in/hackeryisus/">LinkedIn</a>
+      <a href="https://www.youtube.com/@hackeryisus">YouTube</a>
+    </div>
+    <p class="fine">Built by Jesús M. Hernández</p>
+  </div>
+</footer>
+
+</body>
+</html>
