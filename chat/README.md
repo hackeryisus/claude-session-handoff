@@ -17,7 +17,7 @@ Cada vez que lo invocas, el documento mejora. Es una memoria que viaja contigo.
 
 - **Proyectos de Claude (claude.ai):** pega el prompt en las instrucciones del proyecto. Después basta con escribir "actualiza la memoria".
 - **Proyectos o GPT personalizado de ChatGPT:** pégalo en las instrucciones del proyecto o del GPT. Igual: "actualiza la memoria".
-- **Skill en claude.ai (planes Pro, Max, Team y Enterprise):** sube el archivo `dist/session-handoff.zip` en Configuración, sección de Skills. Necesitas tener activada la ejecución de código. La skill incluye este mismo modo y se activa sola cuando dices "documento de memoria" o "actualiza la memoria".
+- **Skill en claude.ai (planes Pro, Max, Team y Enterprise):** sube el mismo `.zip` que descargaste (`claude-session-handoff-main.zip`), sin descomprimirlo, en Configuración, sección de Skills. Necesitas tener activada la ejecución de código. La skill incluye este mismo modo y se activa sola cuando dices "documento de memoria" o "actualiza la memoria".
 
 ## Consejos
 

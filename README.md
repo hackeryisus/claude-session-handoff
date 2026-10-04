@@ -61,8 +61,9 @@ grows, paste the prompt again and you get version 2 of the same document.
 - **Projects (Claude or ChatGPT) / custom GPTs:** put the prompt in the
   instructions, then just say "actualiza la memoria".
 - **Skills on claude.ai** (Pro, Max, Team, Enterprise, with code execution on):
-  upload [`dist/session-handoff.zip`](dist/session-handoff.zip) under
-  Settings → Skills. It includes the memory document mode.
+  upload the same `.zip` you downloaded (`claude-session-handoff-main.zip`)
+  under Settings → Skills, without unzipping it. It includes the memory
+  document mode.
 
 Step-by-step guide in Spanish: [`chat/README.md`](chat/README.md).
 
@@ -120,8 +121,7 @@ Then in the next session:
 ```
 skill/session-handoff/   ← the skill (SKILL.md + references/), what you install
 chat/                    ← pasteable prompt for chat-only users (claude.ai, ChatGPT)
-dist/                    ← session-handoff.zip, ready to upload to claude.ai
-build.sh                 ← syncs the chat prompt into the skill and rebuilds the zip
+build.sh                 ← syncs the chat prompt into the skill
 web/                     ← the landing page (promo site)
 LICENSE          ← MIT
 ```
