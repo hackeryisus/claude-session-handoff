@@ -1,7 +1,7 @@
 ---
 name: session-handoff
-version: 1.1.0
-description: Use when the user says "session handoff", "wrap up session", "hand off", "handoff summary", "handoff to file", or wants to carry context from one session into one or more fresh sessions — especially to continue a multi-step effort after a break, or to fan a finished planning/brainstorm session out into parallel implementation sessions. Two modes - chat-only (default) and file (writes a portable, pointer-first handoff to disk so a new session resumes token-efficiently). Covers goal, step ledger, deliverables, live state, read-on-demand pointers, parallel tracks, how-to-verify, and the single next action.
+version: 1.2.0
+description: Use when the user says "session handoff", "wrap up session", "hand off", "handoff summary", "handoff to file", "documento de memoria", "actualiza la memoria", "memory doc", or wants to carry context from one session into one or more fresh sessions — especially to continue a multi-step effort after a break, or to fan a finished planning/brainstorm session out into parallel implementation sessions. Three modes - chat-only (default), file (portable pointer-first handoff on disk), and memory document (self-contained summary of the whole conversation that the user carries into new chats and that is upgraded in place, version by version, each time it is invoked; for chat-only users without a filesystem).
 ---
 
 # Session Handoff
@@ -10,18 +10,24 @@ Produce a handoff so work survives a `/clear`, a break of hours, or a fan-out in
 
 The audience is a **future instance of you** (or several), not a stakeholder. A handoff is a routing artifact, not a status report.
 
-## Two modes
+## Modes
 
 - **Chat mode (default).** Output the handoff in chat only. Use for a quick "where am I" before the user clears, when nothing needs to persist to disk.
 - **File mode.** Write a portable handoff to a file so a fresh session (or many) can pick up by reading that file. Use when the user will stop for hours, start a brand-new session after `/clear`, or split one finished effort into parallel sessions. Triggers: "handoff to file", "handoff for the next session(s)", "leave this ready for tomorrow / another session", or any time the session is the continuation of a finished planning/brainstorm effort.
 
-When unsure which mode, ask one line: "chat-only, or write a file to continue later / in other sessions?"
+- **Memory document mode.** Produce or upgrade a self-contained *Documento de memoria* of the WHOLE conversation, delivered as one copyable block. Use when the user wants a portable memory to paste into a new chat or another tool, or when the conversation began with an existing memory document. Triggers: "documento de memoria", "actualiza la memoria", "memory doc", "resume toda la conversación", "summarize this whole conversation so I can continue elsewhere". Follow `references/memory-document.md` exactly: it holds the fixed template, the merge rules (vN in, vN+1 of the same document out, superseded items moved, never deleted) and the delivery format.
 
-## Core principle: pointer-first, not paste
+**Environment rule.** If the next session cannot read the files you can see (claude.ai chat, mobile app, a code-execution sandbox that does not persist, any chat-only surface), pointers are useless to the reader: use memory document mode, which is self-contained. If you do have a filesystem, chat and file modes stay pointer-first. A conversation that starts with a `# Memoria:` document is always a memory-document update, whatever the surface.
+
+When unsure which mode, ask one line: "chat-only, write a file to continue later / in other sessions, or a portable memory document?"
+
+## Core principle: pointer-first, not paste (chat and file modes)
 
 Token efficiency is the whole point of file mode. The handoff stays **small and routing** — roughly one screen. It **links** to the source material (a prior brainstorm or plan, the deliverable being built, reference notes); it does **not** copy their contents. The next session reads the handoff first, then pulls referenced files **only for the step it is executing.**
 
 A handoff that pastes full context defeats its own purpose.
+
+Memory document mode is the deliberate exception: its reader cannot open files, so the facts, decisions and approved texts go inside the document.
 
 ## When to invoke
 
@@ -142,8 +148,8 @@ The file is the vehicle; the user points the next session at it.
 
 ## Hard rules
 
-1. **Mode discipline.** Chat mode: never write a file. File mode: write exactly one handoff file and also surface its path in chat. Don't update memory from this skill in either mode.
-2. **Pointer-first.** Link source material; never paste the contents of the plan, brainstorm, or large deliverables into the handoff. Quote only the in-flight delta the source files lack.
+1. **Mode discipline.** Chat mode: never write a file. File mode: write exactly one handoff file and also surface its path in chat. Memory document mode: one complete document in one copyable block; write it to a file only if the user asks and a filesystem exists. Don't update the assistant's own memory from this skill in any mode.
+2. **Pointer-first (chat and file modes).** Link source material; never paste the contents of the plan, brainstorm, or large deliverables into the handoff. Quote only the in-flight delta the source files lack.
 3. **Never invent state.** A section with nothing to report says "none" / "n/a" — do not omit it. Structure stability is the point.
 4. **Absolute paths or stable links.** The next session may have a different working directory.
 5. **If a plan or brainstorm drove the effort, name it first** (`source` / `plan`) so the next session reads it before anything else.
@@ -160,4 +166,5 @@ The file is the vehicle; the user points the next session at it.
 - Omitting a section because "nothing is running" — write "none".
 - Fan-out tracks that share the same files — they will clobber each other.
 - Writing more than one handoff file, or scattering them across the project.
+- In memory document mode: emitting a fresh summary next to the old document instead of upgrading it, deleting superseded decisions instead of moving them, or rebuilding a prior document you cannot fully see.
 - A "what went well / poorly" retro, or next-step recommendations beyond the single "Pick up here" line.
